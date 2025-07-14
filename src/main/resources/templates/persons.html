@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Gym Visitors</title>
+</head>
+<body>
+
+<h1>Список усіх відвідувачів спортзалу</h1>
+
+<table border="1">
+    <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Age</th>
+        <th>Gender</th>
+        <th>GymSeasonTicket</th>
+        <th>Telegram Account</th>
+        <th>Phone Number</th>
+        <th>Gmail</th>
+    </tr>
+
+    <tr th:each="person : ${persons}">
+        <td th:text="${person.id}">ID</td>
+        <td th:text="${person.name}">Ім’я</td>
+        <td th:text="${person.age}">Вік</td>
+        <td th:text="${person.gender}">Стать</td>
+        <td th:text="${person.seasonTicket != null ? person.seasonTicket.ticketType : '---'}">Квиток</td>
+        <td th:text="${person.telegramAccount}">Телеграм</td>
+        <td th:text="${person.phoneNumber}">Телефон</td>
+        <td th:text="${person.gmail}">Gmail</td>
+    </tr>
+</table>
+
+<br>
+
+<a href="/html/persons/add">➕ Додати нову особу</a><br>
+<a href="/html/persons/delete">🗑️ Видалити особу</a>
+
+</body>
+</html>

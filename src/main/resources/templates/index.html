@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+</head>
+<body>
+
+<form>
+    <label for="fname">First name:</label><br>
+    <input type="text" id="fname" name="fname"><br>
+    <label for="lname">Last name:</label><br>
+    <input type="text" id="lname" name="lname">
+
+    <ul>
+        <li>ya tut</li>
+        <li>ti tut</li>
+    </ul>
+
+    <button onclick="saveName()">Зберегти</button>
+    <p id="response"></p>
+</form>
+
+<script type="text/javascript">
+     let savedFirstName = "";
+     let saveLastName = "";
+
+     function saveName(){
+         event.preventDefault();
+         savedFirstName = document.getElementById("fname").value;
+         saveLastName = document.getElementById("lname").value;
+         document.getElementById("response").innerText = "Збережено : " + savedFirstName + "  " + saveLastName;
+         console.log("Збереженне ім'я  : " + savedFirstName + "  " + saveLastName);
+     }
+
+</script>
+
+</body>
+</html>
