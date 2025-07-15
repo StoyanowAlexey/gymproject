@@ -17,10 +17,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -73,13 +70,14 @@ public class GymPersonController {
 
     }
 
-
+    //base 64 image
+    //https://www.baeldung.com/java-base64-encode-and-decode
     @PostMapping("/getPersonsImage")
     public ResponseEntity<String> getPersonsImage(@RequestParam int id, @RequestParam("file")MultipartFile multipartFile){
-        if (multipartFile.isEmpty() || !gymPersonRepository.existsById(id)) ResponseEntity.status(HttpStatus.NOT_FOUND).body("MultipartFile was not send!");
+        if (multipartFile.isEmpty() || !gymPersonRepository.existsById(id)) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("MultipartFile was not send!");
         try{
             GymPerson gymPerson = gymPersonRepository.getGymPersonById(id);
-            gymPerson.setPhoto(multipartFile.getBytes());
+            gymPerson.setPhoto(Base64.getEncoder().withoutPadding().encodeToString(multipartFile.getBytes()));
             gymPersonRepository.save(gymPerson);
             return ResponseEntity.ok("Photo was successfully added! ");
         } catch (IOException e) {

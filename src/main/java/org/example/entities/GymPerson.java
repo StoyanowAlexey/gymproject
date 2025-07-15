@@ -26,9 +26,7 @@ public class GymPerson {
     @Column(name = "phone_number")
     private String phoneNumber;
     private String gmail;
-    @Lob
-    @Column(name = "photo", columnDefinition="BLOB")
-    private byte[] photo;
+    private String photo;
 
     @Override
     public String toString() {

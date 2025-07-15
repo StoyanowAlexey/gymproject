@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Профіль відвідувача</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            padding: 30px;
+        }
+
+        .profile-card {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .profile-photo {
+            display: block;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border: 3px solid #007bff;
+        }
+
+        .profile-info {
+            text-align: center;
+        }
+
+        .profile-info h2 {
+            margin: 10px 0;
+        }
+
+        .profile-info p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="profile-card">
+    <img th:src="'data:image/jpeg;base64,' + ${person.photo}" alt="Фото профілю" class="profile-photo"/>
+
+    <div class="profile-info">
+        <h2 th:text="${person.name}">Ім’я</h2>
+        <p><span class="label">ID:</span> <span th:text="${person.id}">123</span></p>
+        <p><span class="label">Вік:</span> <span th:text="${person.age}">25</span></p>
+        <p><span class="label">Стать:</span> <span th:text="${person.gender}">MALE</span></p>
+        <p><span class="label">Телеграм:</span>
+            <span th:text="${person.telegramAccount != null && !person.telegramAccount.isEmpty() ? person.telegramAccount : 'Немає'}">Немає</span>
+        </p>
+        <p><span class="label">Телефон:</span> <span th:text="${person.phoneNumber}">+380...</span></p>
+        <p><span class="label">Gmail:</span> <span th:text="${person.gmail}">example@gmail.com</span></p>
+        <p><span class="label">Абонемент:</span>
+            <span th:if="${person.seasonTicket != null}" th:text="${person.seasonTicket.ticketType}">Стандарт</span>
+            <span th:unless="${person.seasonTicket != null}">Немає</span>
+        </p>
+    </div>
+</div>
+</body>
+</html>

@@ -3,9 +3,10 @@ package org.example.repositories;
 import org.example.entities.GymPerson;
 import org.example.entities.GymSeasonTicket;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
+@Repository
 public interface GymPersonRepository extends JpaRepository<GymPerson, Integer> {
     boolean existsByName(String name);
 

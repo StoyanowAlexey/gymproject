@@ -42,7 +42,7 @@ public class GymPersonHTMLController {
                                @RequestParam String phoneNumber,
                                @RequestParam String gmail
     ){
-        GymPersonDTO gymPersonDTO = new GymPersonDTO(15, name , age, gender, gymSeasonTicketRepository.findById(seasonTicketId),  telegramAccount, phoneNumber, gmail);
+        GymPersonDTO gymPersonDTO = new GymPersonDTO(15, name , age, gender, gymSeasonTicketRepository.findById(seasonTicketId),  telegramAccount, phoneNumber, gmail, "");
         gymPersonRepository.save(gymPersonMapper.toEntity(gymPersonDTO));
         return "redirect:/html/persons";
     }
@@ -67,6 +67,12 @@ public class GymPersonHTMLController {
             model.addAttribute("person", gymPersonRepository.getGymPersonByGmail(gmail));
             return "person-details";
         }
+    }
+
+    @GetMapping("/html/persons/profile/{id}")
+    public String showPersonInformation(@PathVariable int id, Model model){
+        model.addAttribute("person", gymPersonRepository.getGymPersonById(id));
+        return "print_person";
     }
 
     @GetMapping("/html/persons/delete")

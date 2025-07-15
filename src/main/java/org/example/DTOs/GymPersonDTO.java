@@ -16,5 +16,6 @@ public class GymPersonDTO {
     private String telegramAccount;
     private String phoneNumber;
     private String gmail;
+    private String photo;
 
 }
