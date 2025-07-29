@@ -1,46 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Додати особу</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            padding: 30px;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #fff;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
 
-<h2>Форма додавання</h2>
+<div class="form-container">
+    <h2>Форма додавання відвідувача</h2>
 
-<form action="/html/persons/add" method="post">
-    <label for="name">Ім'я:</label>
-    <input type="text" id="name" name="name"><br>
+    <form action="/html/persons/add" method="post">
+        <label for="name">Ім’я:</label>
+        <input type="text" id="name" name="name" required>
 
-    <label for="age">Вік:</label>
-    <input type="number" id="age" name="age"><br>
+        <label for="age">Вік:</label>
+        <input type="number" id="age" name="age" min="0" required>
 
-    <label for="gender">Гендер:</label>
-    <select id="gender" name="gender">
-        <option value="Male">Чоловік</option>
-        <option value="Female">Жінка</option>
-        <option value="Other">Інше</option>
-    </select><br>
+        <label for="gender">Стать:</label>
+        <select id="gender" name="gender" required>
+            <option value="">-- Оберіть стать --</option>
+            <option value="MALE">Чоловік</option>
+            <option value="FEMALE">Жінка</option>
+            <option value="OTHER">Інше</option>
+        </select>
 
-    <label for="seasonTicket">Абонемент:</label>
-    <select id="seasonTicket" name="seasonTicketId">
-        <option th:each="ticket : ${seasonTickets}"
-                th:value="${ticket.id}"
-                th:text="${ticket.ticketType}">
-        </option>
-    </select>
+        <label for="seasonTicket">Абонемент:</label>
+        <select id="seasonTicket" name="seasonTicketId">
+            <option value="">-- Без абонементу --</option>
+            <option th:each="ticket : ${seasonTickets}"
+                    th:value="${ticket.id}"
+                    th:text="${ticket.ticketType}">
+            </option>
+        </select>
 
-    <label for="telegram">Телеграм:</label>
-    <input type="text" id="telegram" name="telegramAccount"><br>
+        <label for="telegram">Телеграм:</label>
+        <input type="text" id="telegram" name="telegramAccount">
 
-    <label for="phone">Номер Телефону:</label>
-    <input type="text" id="phone" name="phoneNumber">
+        <label for="phone">Номер телефону:</label>
+        <input type="text" id="phone" name="phoneNumber">
 
-    <label for="gmail">Gmail:</label>
-    <input type="text" id="gmail" name="gmail">
+        <label for="gmail">Gmail:</label>
+        <input type="email" id="gmail" name="gmail">
 
-    <button type="submit">Додати</button>
-</form>
+        <button type="submit">➕ Додати</button>
+    </form>
+</div>
 
 </body>
 </html>
