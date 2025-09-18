@@ -219,7 +219,7 @@
                 top: 1rem;
                 left: 1rem;
                 width: 48px;
-                aspect-ratio: 1;
+                   aspect-ratio: 1;
                 display: grid;
                 place-items: center;
                 opacity: 0.8;
@@ -320,7 +320,7 @@
 <script th:inline="javascript">
     function deletePerson(id, btnElement) {
         if (!confirm('Ви впевнені, що хочете видалити цього відвідувача?')) return;
-        fetch('/persons/delete?personId=' + id, { method: 'DELETE' })
+        fetch('/persons/delete/' + id, { method: 'DELETE' })
             .then(response => {
                 if (response.ok) {
                     let row = btnElement.closest('tr');
@@ -358,7 +358,6 @@
     ctrl.on('change', sync)
     update()
 </script>
-
 
 </body>
 </html>

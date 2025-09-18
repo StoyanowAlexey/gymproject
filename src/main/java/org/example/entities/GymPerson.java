@@ -8,6 +8,7 @@ import org.example.entities.enums.Gender;
 
 @Getter
 @Setter
+@Data
 @Entity
 @Table(name = "gym_visitors")
 public class GymPerson {
@@ -18,7 +19,7 @@ public class GymPerson {
     private int age;
     @Enumerated(EnumType.STRING)
     private Gender gender;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "season_ticket_id")
     private GymSeasonTicket seasonTicket;
     @Column(name = "telegram_account")

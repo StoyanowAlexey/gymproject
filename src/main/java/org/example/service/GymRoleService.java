@@ -18,7 +18,7 @@ public class GymRoleService {
     public final GymRoleRepository gymRoleRepository;
     public final GymWorkerRepository gymWorkerRepository;
 
-    public void rolesEnterMenu(int number) {
+    /*public void rolesEnterMenu(int number) {
         Scanner scanner = new Scanner(System.in);
         GymRole gymRole = new GymRole();
         if (number > 1) {
@@ -63,6 +63,6 @@ public class GymRoleService {
             gymWorkerList.forEach(worker -> worker.setRole(gymRoleRepository.findById(102)));
             gymWorkerRepository.saveAll(gymWorkerList);
         }
-    }
+    }*/
 
 }

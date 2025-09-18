@@ -6,7 +6,7 @@
 </head>
 <body>
 <h2>Виберіть ім'я людини яку потрібно видалити</h2>
-<form action="/html/persons/delete" method="post">
+<form action="/delete" method="post">
     <label for="personId">Ім'я</label>
     <select id="personId" name="personId">
         <option th:each="person : ${persons}"

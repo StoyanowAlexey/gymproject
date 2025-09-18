@@ -7,17 +7,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface GymWorkerRepository extends JpaRepository<GymWorker, Integer> {
-       GymWorker findGymPersonByName(String name);
-       boolean existsByName(String name);
 
        List<GymWorker> findAllByRole_Role(String role);
 
        List<GymWorker> findByRole_Id(int id);
 
-       GymWorker findById(int id);
+       Optional<GymWorker> findByUsername(String username);
 
        //void updateGymPersonById(int id, GymWorker gymPerson);
 

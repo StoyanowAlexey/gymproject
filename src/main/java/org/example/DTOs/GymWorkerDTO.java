@@ -9,10 +9,9 @@ import org.example.entities.enums.Gender;
 @AllArgsConstructor
 public class GymWorkerDTO {
     private int id;
-    private String name;
+    private String username;
     private int age;
-    private String phoneNumber;
-    private Gender gender;
+    private String password;
     private GymRole gymRole;
-    private int salary;
+
 }

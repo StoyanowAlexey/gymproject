@@ -1,20 +1,18 @@
-package org.example.DTOs;
+package org.example.requests;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.example.entities.GymSeasonTicket;
 import org.example.entities.enums.Gender;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
-@AllArgsConstructor
-public class GymPersonDTO {
-    private int id;
+public class CreatePersonRequest {
+    int id;
     private String name;
     private int age;
     private Gender gender;
-    private GymSeasonTicket seasonTicketId;
+    private Integer seasonTicketId;
     private String telegramAccount;
     private String phoneNumber;
     private String gmail;
-
 }

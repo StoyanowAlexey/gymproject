@@ -1,113 +1,206 @@
 package org.example.controllers;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.message.SimpleMessage;
 import org.example.DTOs.GymPersonDTO;
-import org.example.TestDTO;
+import org.example.UserExcelExporter;
 import org.example.entities.GymPerson;
 import org.example.mappers.GymPersonMapper;
 import org.example.repositories.GymPersonRepository;
 import org.example.repositories.GymSeasonTicketRepository;
-import org.hibernate.Session;
-import org.springframework.http.HttpStatus;
+import org.example.requests.CreatePersonRequest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
-@RestController
+@Controller
+@RequestMapping("/persons")
 @RequiredArgsConstructor
 public class GymPersonController {
-    public final GymPersonRepository gymPersonRepository;
-    public final GymSeasonTicketRepository gymSeasonTicketRepository;
-    public final GymPersonMapper gymPersonMapper;
-    public final JavaMailSender javaMailSender;
 
-    @GetMapping("/printAllPersonsBySeasonTicket/{seasonTicketId}")
-    public List<GymPerson> printAllPersonsBySeasonTicket(@PathVariable int seasonTicketId) {
-        return gymPersonRepository.findAllBySeasonTicket(gymSeasonTicketRepository.findById(seasonTicketId));
+    private final GymPersonRepository gymPersonRepository;
+    private final GymSeasonTicketRepository gymSeasonTicketRepository;
+    private final GymPersonMapper gymPersonMapper;
+    private final JavaMailSender javaMailSender;
+
+    // HTML: Головна сторінка
+    @GetMapping
+    public String showAll(Model model) {
+        model.addAttribute("persons", gymPersonRepository.findAll());
+        return "persons";
+    }
+    // HTML: Форма додавання
+    @GetMapping("/add")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String showAddForm(Model model) {
+        model.addAttribute("seasonTickets", gymSeasonTicketRepository.findAll());
+        return "add-person";
     }
 
-    @PostMapping("/postNewPerson")
-    public GymPerson addNewPerson(@RequestBody GymPersonDTO gymPersonDTO) {
-        return gymPersonMapper.toEntity(gymPersonDTO);
+    // HTML: Обробка форми
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String addPersonForm(@ModelAttribute CreatePersonRequest request,
+                                @RequestParam("photo") MultipartFile photo) throws IOException {
+        var ticketId = request.getSeasonTicketId() != null ? request.getSeasonTicketId() : 1;
+        var person = gymPersonMapper.createFromRequest(request);
+        person.setPhoto(Base64.getEncoder().encodeToString(photo.getBytes()));
+        person.setSeasonTicket(gymSeasonTicketRepository.findById(ticketId));
+        gymPersonRepository.save(person);
+        return "redirect:/persons";
     }
 
-    @DeleteMapping("/deletePersonById/{id}")
-    public ResponseEntity<String> deletePersonById(@PathVariable int id) {
-        if (!gymPersonRepository.existsById(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Person with this " + id + " is not found");
+
+    @GetMapping("/users/export/excel")
+    public void exportToExcel(HttpServletResponse response) throws IOException {
+        response.setContentType("application/octet-stream");
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        String currentDateTime = dateFormatter.format(new Date());
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=users_" + currentDateTime + ".xlsx";
+        response.setHeader(headerKey, headerValue);
+
+        List<GymPerson> listUsers = gymPersonRepository.findAll();
+
+        UserExcelExporter excelExporter = new UserExcelExporter(listUsers);
+
+        excelExporter.export(response);
+    }
+
+    // REST: JSON додавання
+    /*@PostMapping("/add")
+    @ResponseBody
+    public ResponseEntity<?> addPersonJson(@RequestBody @Validated CreatePersonRequest request) throws IOException {
+        var ticketId = request.getSeasonTicketId() != null ? request.getSeasonTicketId() : 1;
+        var ticket = gymSeasonTicketRepository.findById(ticketId);
+        if (ticket == null || request.getGender() == null)
+            return ResponseEntity.badRequest().body("Invalid ticket ID or gender");
+        var person = gymPersonMapper.createFromRequest(request);
+        person.setSeasonTicket(ticket);
+        gymPersonRepository.save(person);
+        return ResponseEntity.ok("Person added");
+    }*/
+
+    // HTML: Пошук
+    @GetMapping("/enterMenu")
+    public String enterForm() {
+        return "find-person";
+    }
+
+    @PostMapping("/enterMenu")
+    public String findByGmail(@RequestParam String gmail, Model model) {
+        if (!gymPersonRepository.existsByGmail(gmail)) {
+            model.addAttribute("error", "Not found");
+            return "find-person";
         }
+        model.addAttribute("person", gymPersonRepository.getGymPersonByGmail(gmail));
+        return "person-details";
+    }
+
+    // HTML: Профіль
+    @GetMapping("/profile/{id}")
+    public String showProfile(@PathVariable int id, Model model) {
+        model.addAttribute("person", gymPersonRepository.getGymPersonById(id));
+        model.addAttribute("seasonTickets", gymSeasonTicketRepository.findAll());
+        return "print_person";
+    }
+
+    @PostMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody @Validated CreatePersonRequest request) {
+        var person = gymPersonRepository.findById(request.getId())
+                .orElse(null);
+
+        if (person == null) {
+            return ResponseEntity.badRequest().body("Person not found");
+        }
+
+        // оновлюємо тільки потрібні поля
+        gymPersonMapper.updateFromRequest(request, person);
+
+        if (request.getSeasonTicketId() != null) {
+            var ticket = gymSeasonTicketRepository.findById(request.getSeasonTicketId()).orElse(null);
+            person.setSeasonTicket(ticket);
+        } else {
+            person.setSeasonTicket(gymSeasonTicketRepository.getGymSeasonTicketById(2));
+        }
+
+        gymPersonRepository.save(person);
+        return ResponseEntity.ok("updated");
+    }
+
+    @DeleteMapping("/delete")
+    @ResponseBody
+    public ResponseEntity<?> deletePerson(@RequestParam int personId) {
+        if (gymPersonRepository.existsById(personId)) {
+            gymPersonRepository.deleteById(personId);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
+    // REST: Надіслати email
+    @PostMapping("/sendEmail")
+    public String sendEmail(@RequestParam(value = "id") int id,
+                            @RequestParam("message") String message) {
+        var person = gymPersonRepository.getGymPersonById(id);
+        if (person.getGmail() == null) return new NullPointerException().getMessage();
         try {
-            gymPersonRepository.deleteById(id);
-            return ResponseEntity.ok("Person with ID " + id + " deleted successfully");
+            var simpleMailMessage = new SimpleMailMessage();
+            simpleMailMessage.setTo(person.getGmail());
+            simpleMailMessage.setSubject("Jym Company Email");
+            simpleMailMessage.setText(message);
+            simpleMailMessage.setFrom("rojbels@gmail.com");
+            javaMailSender.send(simpleMailMessage);
+            return "redirect:/persons";
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error deleting person: " + e.getMessage());
+            return e.getMessage();
         }
     }
 
-    @PostMapping(("/sendPersonEmail"))
-    public ResponseEntity<String> sendPersonEmail(@RequestParam int id) {
-        if (Objects.equals(gymPersonRepository.getGymPersonById(id).getGmail(), null))
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Person with this " + gymPersonRepository.getGymPersonById(id).getGmail() + " not found ");
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(gymPersonRepository.getGymPersonById(id).getGmail());
-            message.setSubject("Sho ti Golova");
-            message.setText("akte0n tut Bil");
-            message.setFrom("rojbels@gmail.com");
-            javaMailSender.send(message);
-            return ResponseEntity.ok("Email was successfully sent ");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Email wast not sent ");
-        }
-
+    @GetMapping("/sendEmail")
+    public String showForm(@RequestParam("id") int id, Model model) {
+        model.addAttribute("id", id);
+        return "send_email";
     }
 
-    //base 64 image
-    //https://www.baeldung.com/java-base64-encode-and-decode
-    @PostMapping("/getPersonsImage")
-    public ResponseEntity<String> getPersonsImage(@RequestParam int id, @RequestParam("file")MultipartFile multipartFile){
-        if (multipartFile.isEmpty() || !gymPersonRepository.existsById(id)) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("MultipartFile was not send!");
-        try{
-            GymPerson gymPerson = gymPersonRepository.getGymPersonById(id);
-            gymPerson.setPhoto(Base64.getEncoder().withoutPadding().encodeToString(multipartFile.getBytes()));
-            gymPersonRepository.save(gymPerson);
-            return ResponseEntity.ok("Photo was successfully added! ");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    // REST: Додати фото
+    @PostMapping("/upload-photo")
+    @ResponseBody
+    public ResponseEntity<String> uploadPhoto(@RequestParam("id") int id, @RequestParam("file") MultipartFile file) throws IOException {
+        if (file.isEmpty() || !gymPersonRepository.existsById(id)) {
+            return ResponseEntity.badRequest().body("Invalid input");
         }
-
+        var person = gymPersonRepository.getGymPersonById(id);
+        person.setPhoto(Base64.getEncoder().encodeToString(file.getBytes()));
+        gymPersonRepository.save(person);
+        return ResponseEntity.ok("Photo saved");
     }
 
 
-
-    @PatchMapping("/updatePersonInformation/{id}")
-    public ResponseEntity<String> updatePerson(@PathVariable int id, @RequestBody GymPersonDTO gymPersonDTO) {
-        if (!gymPersonRepository.existsById(id))
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Person with this " + id + " is not found");
-        try {
-            GymPerson updatedPerson = gymPersonMapper.toEntity(gymPersonDTO);
-            updatedPerson.setId(id);
-
-            System.out.println("ID              -               " + id);
-            System.out.println(updatedPerson);
-
-            gymPersonRepository.save(updatedPerson);
-            return ResponseEntity.ok("Person with ID " + id + " successfully updated");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating person: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/getAllPersons")
-    public List<GymPerson> getAllPersons() {
+    // REST: Отримати всіх
+    @GetMapping("/all-json")
+    @ResponseBody
+    public List<GymPerson> getAll() {
         return gymPersonRepository.findAll();
     }
 }

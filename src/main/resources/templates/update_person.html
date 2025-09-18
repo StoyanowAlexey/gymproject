@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Оновлення інформації про відвідувача</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            background: #28a745;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Оновити відвідувача спортзалу</h2>
+
+    <form th:action="@{/updatePersonInformation/{id}(id=${person.id})}" method="post">
+        <!-- Для підтримки PATCH -->
+        <input type="hidden" name="_method" value="patch" />
+
+        <label for="name">Ім'я:</label>
+        <input type="text" id="name" name="name" th:value="${person.name}" required>
+
+        <label for="age">Вік:</label>
+        <input type="number" id="age" name="age" th:value="${person.age}" min="0" required>
+
+        <label for="gender">Стать:</label>
+        <select id="gender" name="gender">
+            <option th:selected="${person.gender == 'MALE'}" value="MALE">Чоловік</option>
+            <option th:selected="${person.gender == 'FEMALE'}" value="FEMALE">Жінка</option>
+            <option th:selected="${person.gender == 'OTHER'}" value="OTHER">Інше</option>
+        </select>
+
+        <!-- Додай інші поля при потребі -->
+
+        <button type="submit">Оновити</button>
+    </form>
+</div>
+
+</body>
+</html>

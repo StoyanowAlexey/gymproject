@@ -2,70 +2,251 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Профіль відвідувача</title>
+    <title>Редагування профілю</title>
     <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #cbcaca;
+            --text-color: #ffffff;
+            --input-bg: #ffffff;
+            --input-color: #000000;
+            --button-bg: #007bff;
+            --button-hover-bg: #0056b3;
+        }
+
+        [data-theme='light'] {
+            --bg-color: #f4f4f4;
+            --card-bg: #ffffff;
+            --text-color: #000000;
+            --input-bg: #ffffff;
+            --input-color: #000000;
+            --button-bg: #007bff;
+            --button-hover-bg: #0056b3;
+        }
+
+        [data-theme='dark'] {
+            --bg-color: #000000;
+            --card-bg: #1c1c1c;
+            --text-color: #ffffff;
+            --input-bg: #333333;
+            --input-color: #ffffff;
+            --button-bg: #1a73e8;
+            --button-hover-bg: #0c4a8f;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f3f3f3;
             padding: 30px;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .profile-card {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 25px;
+            max-width: 700px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: background 0.3s;
         }
 
         .profile-photo {
             display: block;
             margin: 0 auto 20px;
             border-radius: 50%;
-            width: 150px;
-            height: 150px;
+            width: 180px;
+            height: 180px;
             object-fit: cover;
-            border: 3px solid #007bff;
+            border: 3px solid var(--text-color);
+            transition: border-color 0.3s;
         }
 
-        .profile-info {
-            text-align: center;
-        }
-
-        .profile-info h2 {
+        .form-group {
             margin: 10px 0;
         }
 
-        .profile-info p {
-            margin: 5px 0;
-            font-size: 16px;
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 3px;
         }
 
-        .label {
-            font-weight: bold;
+        input, select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid var(--text-color);
+            background-color: var(--input-bg);
+            color: var(--input-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        button {
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px;
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            border: none;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover-bg);
+        }
+
+        body::before {
+            --size: 45px;
+            --line: color-mix(in hsl, var(--text-color), transparent 80%);
+            content: '';
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            background:
+                    linear-gradient(90deg, var(--line) 1px, transparent 1px var(--size)) calc(var(--size) * 0.36) 50% / var(--size) var(--size),
+                    linear-gradient(var(--line) 1px, transparent 1px var(--size)) 0% calc(var(--size) * 0.32) / var(--size) var(--size);
+            mask: linear-gradient(-20deg, transparent 50%, white);
+            top: 0;
+            left: 0;
+            transform-style: flat;
+            pointer-events: none;
+            z-index: -1;
+            transition: background 0.3s;
         }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 <div class="profile-card">
-    <img th:src="'data:image/jpeg;base64,' + ${person.photo}" alt="Фото профілю" class="profile-photo"/>
+    <div id="myDiv" th:attr="data-id=${id}"></div>
+    <input type="hidden" name="_method" value="post"/>
 
-    <div class="profile-info">
-        <h2 th:text="${person.name}">Ім’я</h2>
-        <p><span class="label">ID:</span> <span th:text="${person.id}">123</span></p>
-        <p><span class="label">Вік:</span> <span th:text="${person.age}">25</span></p>
-        <p><span class="label">Стать:</span> <span th:text="${person.gender}">MALE</span></p>
-        <p><span class="label">Телеграм:</span>
-            <span th:text="${person.telegramAccount != null && !person.telegramAccount.isEmpty() ? person.telegramAccount : 'Немає'}">Немає</span>
-        </p>
-        <p><span class="label">Телефон:</span> <span th:text="${person.phoneNumber}">+380...</span></p>
-        <p><span class="label">Gmail:</span> <span th:text="${person.gmail}">example@gmail.com</span></p>
-        <p><span class="label">Абонемент:</span>
-            <span th:if="${person.seasonTicket != null}" th:text="${person.seasonTicket.ticketType}">Стандарт</span>
-            <span th:unless="${person.seasonTicket != null}">Немає</span>
-        </p>
+    <img th:src="'data:image/jpeg;base64,' + ${person.photo}" alt="Фото профілю" class="profile-photo"/>
+    <label for="photo">Оберіть фото:</label>
+    <input type="file" name="photo" id="photo" accept="image/*" required>
+
+    <div class="form-group">
+        <label>Ім’я:</label>
+        <input type="text" name="name" id="name" th:value="${person.name}" required/>
     </div>
+
+    <div class="form-group">
+        <label>Вік:</label>
+        <input type="number" name="age" id="age" th:value="${person.age}" min="0" required/>
+    </div>
+
+    <div class="form-group">
+        <label>Стать:</label>
+        <select name="gender" id="gender">
+            <option th:value="${person.gender}" th:text="${person.gender}" selected></option>
+            <option th:value="'Male'" th:text="'Чоловік'" th:if="${person.gender != 'Male'}"></option>
+            <option th:value="'Female'" th:text="'Жінка'" th:if="${person.gender != 'Female'}"></option>
+            <option th:value="'Other'" th:text="'Інше'" th:if="${person.gender != 'Other'}"></option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Абонемент:</label>
+        <select id="seasonTicket">
+            <option th:if="${person.seasonTicket != null}" th:value="${person.seasonTicket.id}" th:text="${person.seasonTicket.ticketType}" selected></option>
+            <option th:if="${person.seasonTicket == null}" value="" selected>Немає</option>
+            <option th:each="ticket : ${seasonTickets}" th:value="${ticket.id}" th:text="${ticket.ticketType}" th:if="${person.seasonTicket == null or ticket.id != person.seasonTicket.id}"></option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Телеграм:</label>
+        <input type="text" name="telegramAccount" id="telegramAccount" th:value="${person.telegramAccount}"/>
+    </div>
+
+    <div class="form-group">
+        <label>Телефон:</label>
+        <input type="text" name="phoneNumber" id="phoneNumber" th:value="${person.phoneNumber}"/>
+    </div>
+
+    <div class="form-group">
+        <label>Gmail:</label>
+        <input type="email" name="gmail" id="gmail" th:value="${person.gmail}"/>
+    </div>
+
+    <button  onclick="updateProfile()">Оновити профіль</button>
 </div>
+
+<script th:inline="javascript">
+    function updateProfile() {
+        let id = document.getElementById("myDiv").dataset.id;
+        let name = document.getElementById("name").value;
+        let gmail = document.getElementById("gmail").value;
+        let telegramAccount = document.getElementById("telegramAccount").value;
+        let phoneNumber = document.getElementById("phoneNumber").value;
+        let gender = document.getElementById("gender").value;
+        let age = document.getElementById("age").value;
+        let seasonTicketId = document.getElementById("seasonTicket").value;
+
+        let xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("POST", "/persons/profile");
+        xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState === 4) {
+                if (xmlhttp.status === 200) {
+                    window.location.href = "/persons";
+                } else {
+                    alert("Помилка: " + xmlhttp.responseText);
+                }
+            }
+        }
+
+        xmlhttp.send(JSON.stringify({
+            "id": id,
+            "name": name,
+            "gender": gender,
+            "age": age,
+            "telegramAccount": telegramAccount,
+            "phoneNumber": phoneNumber,
+            "gmail": gmail,
+            "seasonTicketId": seasonTicketId
+        }));
+
+        let formData = new FormData();
+        formData.append("id", id)
+        formData.append("file", document.getElementById("photo").files[0]);
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", "/persons/upload-photo");
+        xhr.send(formData);
+    }
+</script>
+
+<script type="module">
+    import { Pane } from 'https://cdn.skypack.dev/tweakpane@4.0.4'
+    const config = { theme: 'system', color: 'hsl(200,80%,50%)' }
+    const ctrl = new Pane({ title: 'Config', expanded: true })
+    const update = () => {
+        document.documentElement.dataset.theme = config.theme
+        document.documentElement.style.setProperty('--accent', config.color)
+    }
+    const sync = (event) => {
+        if (!document.startViewTransition ||
+            event.target.controller.view.labelElement.innerText !== 'Theme')
+            return update()
+        document.startViewTransition(() => update())
+    }
+    ctrl.addBinding(config, 'color', { label: 'accent' })
+    ctrl.addBinding(config, 'theme', {
+        label: 'Theme',
+        options: { System: 'system', Light: 'light', Dark: 'dark' }
+    })
+    ctrl.on('change', sync)
+    update()
+</script>
 </body>
 </html>

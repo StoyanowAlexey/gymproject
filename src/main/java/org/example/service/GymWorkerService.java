@@ -18,7 +18,7 @@ public class GymWorkerService {
     public GymWorkerRepository gymWorkerRepository;
     public GymRoleRepository gymRoleRepository;
 
-    public void workerEnterMenu(int number) {
+    /*public void workerEnterMenu(int number) {
         Scanner scanner = new Scanner(System.in);
         GymWorker gymWorker = new GymWorker();
         if (number > 1) {
@@ -112,5 +112,5 @@ public class GymWorkerService {
         gymWorker.setRole(gymRoleRepository.findById(number));
         return gymWorker;
     }
-
+    */
 }
