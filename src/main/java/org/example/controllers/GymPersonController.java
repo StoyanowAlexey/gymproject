@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Controller
-@RequestMapping("/persons")
+@RequestMapping("/people")
 @RequiredArgsConstructor
 public class GymPersonController {
 
@@ -42,21 +43,26 @@ public class GymPersonController {
     private final GymPersonMapper gymPersonMapper;
     private final JavaMailSender javaMailSender;
 
+    @GetMapping("/login")
+    public String loginPage(){
+        return "login";
+    }
+
     // HTML: Головна сторінка
     @GetMapping
     public String showAll(Model model) {
-        model.addAttribute("persons", gymPersonRepository.findAll());
-        return "persons";
+        model.addAttribute("people", gymPersonRepository.findAll());
+        return "people";
     }
     // HTML: Форма додавання
-    @GetMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("seasonTickets", gymSeasonTicketRepository.findAll());
         return "add-person";
     }
 
-    // HTML: Обробка форми
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String addPersonForm(@ModelAttribute CreatePersonRequest request,
                                 @RequestParam("photo") MultipartFile photo) throws IOException {
@@ -65,10 +71,10 @@ public class GymPersonController {
         person.setPhoto(Base64.getEncoder().encodeToString(photo.getBytes()));
         person.setSeasonTicket(gymSeasonTicketRepository.findById(ticketId));
         gymPersonRepository.save(person);
-        return "redirect:/persons";
+        return "redirect:/people";
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/export/excel")
     public void exportToExcel(HttpServletResponse response) throws IOException {
         response.setContentType("application/octet-stream");
@@ -86,26 +92,12 @@ public class GymPersonController {
         excelExporter.export(response);
     }
 
-    // REST: JSON додавання
-    /*@PostMapping("/add")
-    @ResponseBody
-    public ResponseEntity<?> addPersonJson(@RequestBody @Validated CreatePersonRequest request) throws IOException {
-        var ticketId = request.getSeasonTicketId() != null ? request.getSeasonTicketId() : 1;
-        var ticket = gymSeasonTicketRepository.findById(ticketId);
-        if (ticket == null || request.getGender() == null)
-            return ResponseEntity.badRequest().body("Invalid ticket ID or gender");
-        var person = gymPersonMapper.createFromRequest(request);
-        person.setSeasonTicket(ticket);
-        gymPersonRepository.save(person);
-        return ResponseEntity.ok("Person added");
-    }*/
-
-    // HTML: Пошук
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/enterMenu")
     public String enterForm() {
         return "find-person";
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/enterMenu")
     public String findByGmail(@RequestParam String gmail, Model model) {
         if (!gymPersonRepository.existsByGmail(gmail)) {
@@ -116,14 +108,14 @@ public class GymPersonController {
         return "person-details";
     }
 
-    // HTML: Профіль
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/profile/{id}")
     public String showProfile(@PathVariable int id, Model model) {
         model.addAttribute("person", gymPersonRepository.getGymPersonById(id));
         model.addAttribute("seasonTickets", gymSeasonTicketRepository.findAll());
         return "print_person";
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody @Validated CreatePersonRequest request) {
         var person = gymPersonRepository.findById(request.getId())
@@ -147,6 +139,7 @@ public class GymPersonController {
         return ResponseEntity.ok("updated");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete")
     @ResponseBody
     public ResponseEntity<?> deletePerson(@RequestParam int personId) {
@@ -158,7 +151,7 @@ public class GymPersonController {
     }
 
 
-    // REST: Надіслати email
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/sendEmail")
     public String sendEmail(@RequestParam(value = "id") int id,
                             @RequestParam("message") String message) {
@@ -171,19 +164,19 @@ public class GymPersonController {
             simpleMailMessage.setText(message);
             simpleMailMessage.setFrom("rojbels@gmail.com");
             javaMailSender.send(simpleMailMessage);
-            return "redirect:/persons";
+            return "redirect:/people";
         } catch (Exception e) {
             return e.getMessage();
         }
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/sendEmail")
     public String showForm(@RequestParam("id") int id, Model model) {
         model.addAttribute("id", id);
         return "send_email";
     }
 
-    // REST: Додати фото
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/upload-photo")
     @ResponseBody
     public ResponseEntity<String> uploadPhoto(@RequestParam("id") int id, @RequestParam("file") MultipartFile file) throws IOException {
@@ -197,7 +190,7 @@ public class GymPersonController {
     }
 
 
-    // REST: Отримати всіх
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all-json")
     @ResponseBody
     public List<GymPerson> getAll() {

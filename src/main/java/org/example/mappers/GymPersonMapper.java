@@ -1,7 +1,6 @@
 package org.example.mappers;
 
 import org.example.DTOs.GymPersonDTO;
-import org.example.TestDTO;
 import org.example.entities.GymPerson;
 import org.example.requests.CreatePersonRequest;
 import org.mapstruct.*;

@@ -25,8 +25,8 @@ public class MyRunner implements CommandLineRunner {
     @Override
     public void run(String... args) {
         GymRole gymRole = new GymRole();
-        gymRole.setRole("ADMIN");
-        GymRole adminRole = roleRepository.findByRole("ADMIN")
+        gymRole.setRole("ROLE_ADMIN");
+        GymRole adminRole = roleRepository.findByRole("ROLE_ADMIN")
                 .orElseGet(() -> roleRepository.save(gymRole));
 
         // створюємо адміна, якщо нема

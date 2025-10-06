@@ -16,17 +16,19 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomUserDetailsService customUserDetailsService;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults());
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/people/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin(formLogin -> formLogin.loginPage("/people/login").defaultSuccessUrl("/people", true).permitAll());
 
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
