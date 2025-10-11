@@ -22,11 +22,12 @@ public class GymPerson {
     @ManyToOne
     @JoinColumn(name = "season_ticket_id")
     private GymSeasonTicket seasonTicket;
-    @Column(name = "telegram_account")
+    @Column(name = "telegram_account", unique = true)
     private String telegramAccount;
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", unique = true)
     private String phoneNumber;
-    private String gmail;
+    @Column(unique = true)
+    private String email;
     private String photo;
 
     @Override

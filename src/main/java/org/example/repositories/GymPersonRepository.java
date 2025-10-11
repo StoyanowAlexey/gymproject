@@ -26,8 +26,8 @@ public interface GymPersonRepository extends JpaRepository<GymPerson, Integer> {
 
     boolean existsByPhoneNumber(String phoneNumber);
 
-    boolean existsByGmail(String gmail);
+    boolean existsByEmail(String gmail);
 
-    GymPerson getGymPersonByGmail(String gmail);
+    GymPerson getGymPersonByEmail(String gmail);
 
 }

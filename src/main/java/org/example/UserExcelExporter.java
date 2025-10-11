@@ -78,7 +78,7 @@ public class UserExcelExporter {
             int columnCount = 0;
 
             createCell(row, columnCount++, gymPerson.getId(), style);
-            createCell(row, columnCount++, gymPerson.getGmail() == null ? "" : gymPerson.getGmail(), style);
+            createCell(row, columnCount++, gymPerson.getEmail() == null ? "" : gymPerson.getEmail(), style);
             createCell(row, columnCount++, gymPerson.getName() == null ? "" : gymPerson.getName(), style);
             createCell(row, columnCount++, gymPerson.getPhoneNumber() == null ? "" : gymPerson.getPhoneNumber(), style);
             createCell(row, columnCount++, gymPerson.getTelegramAccount() == null ? "" : gymPerson.getTelegramAccount(), style);

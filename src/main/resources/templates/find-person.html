@@ -1,0 +1,20 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Пошук користувача за Gmail</title>
+</head>
+<body>
+
+<h2>Знайти особу за Gmail</h2>
+
+<form action="#" th:action="@{/html/people/find}" method="post">
+    <label for="Email">Введіть Email:</label>
+    <input type="text" id="Email" name="Email" required>
+    <button type="submit">Пошук</button>
+</form>
+
+<p th:if="${error}" th:text="${error}" style="color:red;"></p>
+
+</body>
+</html>

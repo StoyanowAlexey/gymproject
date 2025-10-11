@@ -15,6 +15,6 @@ public class GymPersonDTO {
     private GymSeasonTicket seasonTicketId;
     private String telegramAccount;
     private String phoneNumber;
-    private String gmail;
+    private String email;
 
 }

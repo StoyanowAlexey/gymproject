@@ -48,7 +48,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             String phone = text;
             tempPhoneNumber.put(Long.valueOf(chatId), phone);
             userStates.put(Long.valueOf(chatId), "IDLE");
-            String response = gymPersonRepository.existsByPhoneNumber(phone) ? "нформація за номером телефона\n" + gymPersonRepository.getGymPersonByPhoneNumber(phone): "Хибний номер телефону!";
+            String response = gymPersonRepository.existsByPhoneNumber(phone) ? "Інформація за номером телефона\n" + gymPersonRepository.getGymPersonByPhoneNumber(phone): "Хибний номер телефону!";
             sendMessage(chatId, response);
             return;
         }

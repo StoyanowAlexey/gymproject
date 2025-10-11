@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Редагування профілю</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style> :root {
+        --primary: #11998e;
+        --secondary: #38ef7d;
+        --card-bg: #222;
+        --text-color: #ffffff;
+        --input-bg: #2b2b2b;
+        --input-color: #ffffff;
+        --button-bg: linear-gradient(135deg, var(--primary), var(--secondary));
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: var(--text-color);
+        padding: 20px;
+    }
+
+    .profile-card {
+        width: 100%;
+        max-width: 720px;
+        background: var(--card-bg);
+        padding: 28px;
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    .photo-wrapper {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto;
+    }
+
+    .profile-photo {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        display: block;
+        border: 3px solid rgba(255, 255, 255, 0.12);
+        background: #333;
+    }
+
+    .profile-placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 64px;
+        background: linear-gradient(180deg, #333, #2a2a2a);
+        color: var(--text-color);
+        border: 3px solid rgba(255, 255, 255, 0.12);
+    }
+
+    /* кнопка під фото */
+    .edit-photo-btn {
+        display: block;
+        margin: 10px auto 20px;
+        background: var(--button-bg);
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        text-align: center;
+        text-decoration: none;
+        border: none;
+    }
+
+    .edit-photo-btn:hover {
+        opacity: 0.92;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .form-group {
+        margin: 12px 0;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+    }
+
+    input[type="text"], input[type="number"], input[type="email"], select {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: none;
+        background: var(--input-bg);
+        color: var(--input-color);
+        font-size: 1rem;
+    }
+
+    input:focus, select:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(56, 239, 125, 0.12);
+    }
+
+    .btn-update {
+        margin-top: 18px;
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        background: var(--button-bg);
+        color: var(--text-color);
+        box-shadow: 0 8px 20px rgba(17, 153, 142, 0.12);
+    }
+
+    .btn-update:hover {
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 520px) {
+        .profile-card {
+            padding: 20px;
+        }
+
+        .photo-wrapper {
+            width: 150px;
+            height: 150px;
+        }
+    } </style>
+</head>
+<body>
+<div class="profile-card"> <!-- data-id користувача -->
+    <div id="myDiv" th:attr="data-id=${id}"></div>
+    <div th:if="${errorMessage}"
+         style="background-color:#ffe6e6; color:#900; font-weight:bold; padding:10px; border-radius:8px; margin-bottom:15px;">
+        <p th:text="${errorMessage}"></p></div>
+    <div class="photo-wrapper"><img id="avatarImg" th:if="${person.photo != null}"
+                                    th:src="'data:image/jpeg;base64,' + ${person.photo}" alt="Фото профілю"
+                                    class="profile-photo"/>
+        <div id="avatarPlaceholder" th:if="${person.photo == null}" class="profile-placeholder">👤</div>
+    </div> <!-- кнопка редагування фото --> <label for="photo" class="edit-photo-btn" aria-label="Змінити фото">📷
+        Змінити фото</label> <input type="file" id="photo" name="photo" accept="image/*">
+    <div class="form-group"><label>Ім’я</label> <input type="text" id="name" name="name" th:value="${person.name}"
+                                                       required></div>
+    <div class="form-group"><label>Вік</label> <input type="number" id="age" name="age" th:value="${person.age}" min="0"
+                                                      required></div>
+    <div class="form-group"><label>Стать</label> <select id="gender" name="gender">
+        <option th:value="${person.gender}" th:text="${person.gender}" selected></option>
+        <option th:value="'Male'" th:text="'Чоловік'" th:if="${person.gender != 'Male'}"></option>
+        <option th:value="'Female'" th:text="'Жінка'" th:if="${person.gender != 'Female'}"></option>
+        <option th:value="'Other'" th:text="'Інше'" th:if="${person.gender != 'Other'}"></option>
+    </select></div>
+    <div class="form-group"><label>Абонемент</label> <select id="seasonTicket" name="seasonTicketId">
+        <option th:if="${person.seasonTicket != null}" th:value="${person.seasonTicket.id}"
+                th:text="${person.seasonTicket.ticketType}" selected></option>
+        <option th:if="${person.seasonTicket == null}" value="" selected>Немає</option>
+        <option th:each="ticket : ${seasonTickets}" th:value="${ticket.id}" th:text="${ticket.ticketType}"
+                th:if="${person.seasonTicket == null or ticket.id != person.seasonTicket.id}"></option>
+    </select></div>
+    <div class="form-group"><label>Телеграм</label> <input type="text" id="telegramAccount" name="telegramAccount"
+                                                           th:value="${person.telegramAccount}"></div>
+    <div class="form-group"><label>Телефон</label> <input type="text" id="phoneNumber" name="phoneNumber"
+                                                          th:value="${person.phoneNumber}"></div>
+    <div class="form-group"><label>Email</label> <input type="email" id="email" name="email" th:value="${person.email}">
+    </div>
+    <button type="button" class="btn-update" onclick="updateProfile()">Оновити профіль</button>
+</div>
+<script> const photoInput = document.getElementById('photo');
+photoInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+        let img = document.getElementById('avatarImg');
+        const placeholder = document.getElementById('avatarPlaceholder');
+        if (!img) {
+            img = document.createElement('img');
+            img.id = 'avatarImg';
+            img.className = 'profile-photo';
+            img.alt = 'Фото профілю';
+            const wrapper = document.querySelector('.photo-wrapper');
+            wrapper.insertBefore(img, wrapper.firstChild);
+        }
+        img.src = ev.target.result;
+        img.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+
+function updateProfile() {
+    const id = document.getElementById('myDiv').dataset.id || null;
+    const payload = {
+        id: id,
+        name: document.getElementById('name').value,
+        gender: document.getElementById('gender').value,
+        age: parseInt(document.getElementById('age').value) || null,
+        telegramAccount: document.getElementById('telegramAccount').value,
+        phoneNumber: document.getElementById('phoneNumber').value,
+        email: document.getElementById('email').value,
+        seasonTicketId: document.getElementById('seasonTicket').value || null
+    };
+    if (!payload.name || !payload.age) {
+        alert('Будь ласка, заповніть імʼя та вік.');
+        return;
+    }
+    fetch('/people/profile', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json;charset=UTF-8'},
+        body: JSON.stringify(payload)
+    }).then(res => {
+        if (!res.ok) throw new Error('Не вдалося оновити профіль: ' + res.statusText);
+        const file = photoInput.files[0];
+        if (file && id != null) {
+            const fd = new FormData();
+            fd.append('id', id);
+            fd.append('file', file);
+            return fetch('/people/upload-photo', {method: 'POST', body: fd});
+        }
+        return Promise.resolve();
+    }).then(res2 => {
+        if (res2 && !res2.ok) throw new Error('Не вдалося завантажити фото: ' + res2.statusText);
+        window.location.href = '/people';
+    }).catch(err => {
+        console.error(err);
+        alert(err.message || 'Сталася помилка');
+    });
+} </script>
+</body>
+</html>

@@ -2,23 +2,17 @@ package org.example.controllers;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.example.DTOs.GymPersonDTO;
 import org.example.UserExcelExporter;
 import org.example.entities.GymPerson;
 import org.example.mappers.GymPersonMapper;
 import org.example.repositories.GymPersonRepository;
 import org.example.repositories.GymSeasonTicketRepository;
 import org.example.requests.CreatePersonRequest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
@@ -31,7 +25,6 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 @Controller
 @RequestMapping("/people")
@@ -49,6 +42,7 @@ public class GymPersonController {
     }
 
     // HTML: Головна сторінка
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public String showAll(Model model) {
         model.addAttribute("people", gymPersonRepository.findAll());
@@ -99,12 +93,12 @@ public class GymPersonController {
     }
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/enterMenu")
-    public String findByGmail(@RequestParam String gmail, Model model) {
-        if (!gymPersonRepository.existsByGmail(gmail)) {
+    public String findByEmail(@RequestParam String gmail, Model model) {
+        if (!gymPersonRepository.existsByEmail(gmail)) {
             model.addAttribute("error", "Not found");
             return "find-person";
         }
-        model.addAttribute("person", gymPersonRepository.getGymPersonByGmail(gmail));
+        model.addAttribute("person", gymPersonRepository.getGymPersonByEmail(gmail));
         return "person-details";
     }
 
@@ -156,10 +150,10 @@ public class GymPersonController {
     public String sendEmail(@RequestParam(value = "id") int id,
                             @RequestParam("message") String message) {
         var person = gymPersonRepository.getGymPersonById(id);
-        if (person.getGmail() == null) return new NullPointerException().getMessage();
+        if (person.getEmail() == null) return new NullPointerException().getMessage();
         try {
             var simpleMailMessage = new SimpleMailMessage();
-            simpleMailMessage.setTo(person.getGmail());
+            simpleMailMessage.setTo(person.getEmail());
             simpleMailMessage.setSubject("Jym Company Email");
             simpleMailMessage.setText(message);
             simpleMailMessage.setFrom("rojbels@gmail.com");

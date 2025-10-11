@@ -14,5 +14,5 @@ public class CreatePersonRequest {
     private Integer seasonTicketId;
     private String telegramAccount;
     private String phoneNumber;
-    private String gmail;
+    private String email;
 }
