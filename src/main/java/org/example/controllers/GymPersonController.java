@@ -81,7 +81,7 @@ public class GymPersonController {
 
         List<GymPerson> listUsers = gymPersonRepository.findAll();
 
-        UserExcelExporter excelExporter = new UserExcelExporter(listUsers);
+        UserExcelExporter excelExporter = new UserExcelExporter(listUsers, gymPersonRepository, gymSeasonTicketRepository);
 
         excelExporter.export(response);
     }

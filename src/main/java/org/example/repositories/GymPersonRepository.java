@@ -30,4 +30,5 @@ public interface GymPersonRepository extends JpaRepository<GymPerson, Integer> {
 
     GymPerson getGymPersonByEmail(String gmail);
 
+    int countBySeasonTicket_TicketType(String ticketType);
 }
