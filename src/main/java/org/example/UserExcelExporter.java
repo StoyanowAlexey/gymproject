@@ -11,8 +11,11 @@ import org.apache.poi.xddf.usermodel.chart.*;
 import org.apache.poi.xssf.usermodel.*;
 import org.example.entities.GymPerson;
 import org.example.entities.GymSeasonTicket;
+import org.example.entities.enums.Gender;
 import org.example.repositories.GymPersonRepository;
 import org.example.repositories.GymSeasonTicketRepository;
+
+import org.openxmlformats.schemas.drawingml.x2006.chart.CTDLbls;
 
 public class UserExcelExporter {
 
@@ -50,66 +53,77 @@ public class UserExcelExporter {
         }
     }
 
-    private void writeHeaderForAnalyticChart() {
-        analyticSheet = workbook.createSheet("Analytic Diagram");
-        Row row = analyticSheet.createRow(0);
 
-        CellStyle style = workbook.createCellStyle();
-        XSSFFont font = workbook.createFont();
-        font.setBold(true);
-        font.setFontHeight(16);
-        style.setFont(font);
+    private void createAnalyticDiagram(String sheetName,
+                                       String firstHeader,
+                                       String secondHeader,
+                                       List <Object[]> dataList,
+                                       String chartTitle){
+        XSSFSheet sheet = workbook.createSheet(sheetName);
+        Row headerRow = sheet.createRow(0);
 
-        createCell(row, 0, "Ticket Type", style);
-        createCell(row, 1, "Amount", style);
-    }
+        //header - (заголовок)
+        CellStyle headerStyle = workbook.createCellStyle();
+        XSSFFont headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setFontHeight(16);
+        headerStyle.setFont(headerFont);
 
-    private int writeDataLinesForAnalyticChart() {
+        createCell(headerRow, 0, firstHeader, headerStyle);
+        createCell(headerRow, 1, secondHeader, headerStyle);
+
         int rowCount = 1;
 
-        CellStyle style = workbook.createCellStyle();
-        XSSFFont font = workbook.createFont();
-        font.setFontHeight(14);
-        style.setFont(font);
+        // стиль для данних, пишу шоб не загубитись в майбутньому
+        CellStyle dataStyle = workbook.createCellStyle();
+        XSSFFont dataFont = workbook.createFont();
+        dataFont.setFontHeight(14);
+        dataStyle.setFont(dataFont);
 
-        for (GymSeasonTicket ticket : gymSeasonTicketRepository.findAll()) {
-            Row row = analyticSheet.createRow(rowCount++);
-            int columnCount = 0;
-
-            String ticketType = ticket.getTicketType() != null ? ticket.getTicketType() : "NO TICKET TYPE";
-
-            long count = gymPersonRepository.countBySeasonTicket_TicketType(ticketType);
-
-            createCell(row, columnCount++, ticketType, style);
-            createCell(row, columnCount++, (double) count, style);
+        for (Object[] objects: dataList) {
+            Row row = sheet.createRow(rowCount++);
+            createCell(row, 0, objects[0] , dataStyle);
+            createCell(row, 1, objects[1] , dataStyle);
         }
 
-        return rowCount;
-    }
-
-    private void analyticDiagram(int lastRow) {
-        XSSFDrawing drawing = analyticSheet.createDrawingPatriarch();
+        //безспесередньо створення діаграм
+        XSSFDrawing drawing = sheet.createDrawingPatriarch();
         XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 0, 4, 10, 25);
 
         XSSFChart chart = drawing.createChart(anchor);
-        chart.setTitleText("Ticket Type Analytic");
+        chart.setTitleText(chartTitle);
         chart.setTitleOverlay(false);
 
+// легенда
         XDDFChartLegend legend = chart.getOrAddLegend();
         legend.setPosition(LegendPosition.TOP_RIGHT);
 
+        // Джерела даних
         XDDFDataSource<String> categories = XDDFDataSourcesFactory.fromStringCellRange(
-                analyticSheet, new CellRangeAddress(1, lastRow - 1, 0, 0)
+                sheet, new CellRangeAddress(1, rowCount - 1, 0, 0)
         );
         XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange(
-                analyticSheet, new CellRangeAddress(1, lastRow - 1, 1, 1)
+                sheet, new CellRangeAddress(1, rowCount - 1, 1, 1)
         );
 
-        XDDFChartData data = new XDDFPieChartData(chart.getCTChart().getPlotArea().addNewPieChart());
+        // Створюємо PieChartData через chart.createData
+        XDDFPieChartData data = (XDDFPieChartData) chart.createData(ChartTypes.PIE, null, null);
         data.setVaryColors(true);
-        data.addSeries(categories, values);
+
+        // Додаємо серію
+        XDDFPieChartData.Series series = (XDDFPieChartData.Series) data.addSeries(categories, values);
+
+        // Створюємо Data Labels через CTDLbls
+        CTDLbls ctDLbls = series.getCTPieSer().addNewDLbls();
+        ctDLbls.addNewShowPercent().setVal(true);     // Відсотки
+        ctDLbls.addNewShowVal().setVal(false);        // Не показуємо абсолютне значення
+        ctDLbls.addNewShowCatName().setVal(true);     // Показуємо ім’я категорії
+        ctDLbls.addNewShowLeaderLines().setVal(true); // Лінії до підписів
+
+        // Відображаємо діаграму
         chart.plot(data);
     }
+
 
     private void createCell(Row row, int columnCount, Object value, CellStyle style) {
         if (sheet != null) sheet.autoSizeColumn(columnCount);
@@ -154,10 +168,31 @@ public class UserExcelExporter {
     public void export(HttpServletResponse response) throws IOException {
         writeHeaderLine();
         writeDataLines();
-        writeHeaderForAnalyticChart();
-        int lastRow = writeDataLinesForAnalyticChart();
-        analyticDiagram(lastRow);
 
+        /* //chart with analytic chart by ticketTypess
+        writeHeaderForAnalyticChart(analyticSheet, "TicketType", "Amount", "TicketTypeAnalyticChart");
+        int lastRow = writeDataLinesForAnalyticChart();
+        analyticDiagram(lastRow, analyticSheet,  "Ticket Type Analytic");
+
+        //chart with anallytic chart by gender
+        writeHeaderForAnalyticChart();*/
+
+
+        List<Object[]> ticketData = gymSeasonTicketRepository.findAll().stream()
+                .map(ticket -> new Object[]{
+                        ticket.getTicketType() != null ? ticket.getTicketType() : "NO TICKET TYPE",
+                        (double) gymPersonRepository.countBySeasonTicket_TicketType(ticket.getTicketType())
+                })
+                .toList();
+        createAnalyticDiagram("analyticTicketTypeChart", "TicketType", "Amount", ticketData, "TicketTypeTOAmount");
+
+        List<Object[]> genderData = List.of(
+                new Object[]{"Male", (double) gymPersonRepository.countByGender(Gender.Male)},
+                new Object[]{"Female", (double) gymPersonRepository.countByGender(Gender.Female)},
+                new Object[]{"Other", (double) gymPersonRepository.countByGender(Gender.Other)}
+        );
+
+        createAnalyticDiagram("analyticGenderChart", "Gender", "Amount", genderData, "GenderTOAmount");
         try (ServletOutputStream outputStream = response.getOutputStream()) {
             workbook.write(outputStream);
         }

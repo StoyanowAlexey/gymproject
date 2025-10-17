@@ -13,10 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -48,14 +45,14 @@ public class TelegramBot extends TelegramLongPollingBot {
             String phone = text;
             tempPhoneNumber.put(Long.valueOf(chatId), phone);
             userStates.put(Long.valueOf(chatId), "IDLE");
-            String response = gymPersonRepository.existsByPhoneNumber(phone) ? "Інформація за номером телефона\n" + gymPersonRepository.getGymPersonByPhoneNumber(phone): "Хибний номер телефону!";
+            String response = gymPersonRepository.existsByPhoneNumber(phone) ?  formatGymPersonProfileForTelegram(gymPersonRepository.findGymPersonByPhoneNumber(phone)) : "Хибний номер телефону!";
             sendMessage(chatId, response);
             return;
         }
             switch (text){
                 case "/start" -> sendMenu(chatId);
                 case "Показати моє ім’я" -> sendMessage(chatId, "Твоє ім’я: " + update.getMessage().getFrom().getFirstName());
-                case "Показати список юзерів" -> sendMessage(chatId, "Список : \n" + getAllPeople());
+                //case "Показати список юзерів" -> sendMessage(chatId, "Список : \n" + getAllPeople());
                 case "Інформація за номером телефона" -> {
                     sendMessage(chatId, "Введіть номер телефону без (+380) ");
                     userStates.put(Long.valueOf(chatId), "WAIT_PHONE");
@@ -80,9 +77,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         row1.add(new KeyboardButton("Показати моє ім’я"));
         keyboard.add(row1);
 
-        KeyboardRow row2 = new KeyboardRow();
+        /*KeyboardRow row2 = new KeyboardRow();
         row2.add(new KeyboardButton("Показати список юзерів"));
-        keyboard.add(row2);
+        keyboard.add(row2);*/
 
         KeyboardRow row3 = new KeyboardRow();
         row3.add(new KeyboardButton("Інформація за номером телефона"));
@@ -115,5 +112,23 @@ public class TelegramBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    private String formatGymPersonProfileForTelegram(GymPerson person) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("👤 Профіль користувача\n\n");
+        sb.append("ID: ").append(person.getId()).append("\n");
+        sb.append("Ім'я: ").append(person.getName() == null ? "Не вказано" : person.getName()).append("\n");
+        sb.append("Вік: ").append(person.getAge()).append("\n");
+        sb.append("Стать: ").append(person.getGender() == null ? "Не вказано" : person.getGender()).append("\n");
+        sb.append("Telegram: @").append(person.getTelegramAccount() == null || person.getTelegramAccount().isEmpty()
+                ? "Не вказано" : person.getTelegramAccount()).append("\n");
+        sb.append("Телефон: ").append(person.getPhoneNumber() == null || person.getPhoneNumber().isEmpty()
+                ? "Не вказано" : "+380" + person.getPhoneNumber()).append("\n");
+        sb.append("Email: ").append(person.getEmail() == null || person.getEmail().isEmpty()
+                ? "Не вказано" : person.getEmail()).append("\n");
+        sb.append("💳 Абонемент: ").append(person.getSeasonTicket() == null ? "Не вказано"
+                : person.getSeasonTicket().getTicketType());
+        return sb.toString();
     }
 }
