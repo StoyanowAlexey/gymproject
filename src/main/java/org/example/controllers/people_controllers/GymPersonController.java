@@ -1,17 +1,13 @@
-package org.example.controllers;
+package org.example.controllers.people_controllers;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.example.UserExcelExporter;
-import org.example.entities.GymPerson;
 import org.example.mappers.GymPersonMapper;
 import org.example.repositories.GymPersonRepository;
 import org.example.repositories.GymSeasonTicketRepository;
 import org.example.requests.CreatePersonRequest;
+import org.example.service.gym_people.photo.GymPersonPhotoService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,11 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Base64;
-import java.util.Date;
-import java.util.List;
 
 @Controller
 @RequestMapping("/people")
@@ -34,21 +26,18 @@ public class GymPersonController {
     private final GymPersonRepository gymPersonRepository;
     private final GymSeasonTicketRepository gymSeasonTicketRepository;
     private final GymPersonMapper gymPersonMapper;
-    private final JavaMailSender javaMailSender;
+    private final GymPersonPhotoService gymPersonPhotoService;
 
-    @GetMapping("/login")
-    public String loginPage(){
-        return "login";
-    }
-
-    // HTML: Головна сторінка
+    // пагинация
+    // сортировка
+    // фильтры
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public String showAll(Model model) {
         model.addAttribute("people", gymPersonRepository.findAll());
         return "people";
     }
-    // HTML: Форма додавання
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/add")
     public String showAddForm(Model model) {
@@ -68,39 +57,6 @@ public class GymPersonController {
         return "redirect:/people";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/users/export/excel")
-    public void exportToExcel(HttpServletResponse response) throws IOException {
-        response.setContentType("application/octet-stream");
-        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
-        String currentDateTime = dateFormatter.format(new Date());
-
-        String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename=users_" + currentDateTime + ".xlsx";
-        response.setHeader(headerKey, headerValue);
-
-        List<GymPerson> listUsers = gymPersonRepository.findAll();
-
-        UserExcelExporter excelExporter = new UserExcelExporter(listUsers, gymPersonRepository, gymSeasonTicketRepository);
-
-        excelExporter.export(response);
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/enterMenu")
-    public String enterForm() {
-        return "find-person";
-    }
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/enterMenu")
-    public String findByEmail(@RequestParam String gmail, Model model) {
-        if (!gymPersonRepository.existsByEmail(gmail)) {
-            model.addAttribute("error", "Not found");
-            return "find-person";
-        }
-        model.addAttribute("person", gymPersonRepository.getGymPersonByEmail(gmail));
-        return "person-details";
-    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/profile/{id}")
@@ -109,6 +65,7 @@ public class GymPersonController {
         model.addAttribute("seasonTickets", gymSeasonTicketRepository.findAll());
         return "print_person";
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody @Validated CreatePersonRequest request) {
@@ -119,7 +76,6 @@ public class GymPersonController {
             return ResponseEntity.badRequest().body("Person not found");
         }
 
-        // оновлюємо тільки потрібні поля
         gymPersonMapper.updateFromRequest(request, person);
 
         if (request.getSeasonTicketId() != null) {
@@ -144,25 +100,6 @@ public class GymPersonController {
         return ResponseEntity.notFound().build();
     }
 
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/sendEmail")
-    public String sendEmail(@RequestParam(value = "id") int id,
-                            @RequestParam("message") String message) {
-        var person = gymPersonRepository.getGymPersonById(id);
-        if (person.getEmail() == null) return new NullPointerException().getMessage();
-        try {
-            var simpleMailMessage = new SimpleMailMessage();
-            simpleMailMessage.setTo(person.getEmail());
-            simpleMailMessage.setSubject("Jym Company Email");
-            simpleMailMessage.setText(message);
-            simpleMailMessage.setFrom("rojbels@gmail.com");
-            javaMailSender.send(simpleMailMessage);
-            return "redirect:/people";
-        } catch (Exception e) {
-            return e.getMessage();
-        }
-    }
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/sendEmail")
     public String showForm(@RequestParam("id") int id, Model model) {
@@ -173,21 +110,13 @@ public class GymPersonController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/upload-photo")
     @ResponseBody
-    public ResponseEntity<String> uploadPhoto(@RequestParam("id") int id, @RequestParam("file") MultipartFile file) throws IOException {
-        if (file.isEmpty() || !gymPersonRepository.existsById(id)) {
-            return ResponseEntity.badRequest().body("Invalid input");
+    public ResponseEntity<String> uploadPersonPhoto(@RequestParam("id") int id, @RequestParam("file") MultipartFile file) throws IOException {
+        try{
+            gymPersonPhotoService.uploadPhoto(file, id);
+            return ResponseEntity.ok("Photo saved");
         }
-        var person = gymPersonRepository.getGymPersonById(id);
-        person.setPhoto(Base64.getEncoder().encodeToString(file.getBytes()));
-        gymPersonRepository.save(person);
-        return ResponseEntity.ok("Photo saved");
-    }
-
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/all-json")
-    @ResponseBody
-    public List<GymPerson> getAll() {
-        return gymPersonRepository.findAll();
+        catch (IllegalArgumentException | IOException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

@@ -1,41 +1,31 @@
-package org.example;
+package org.example.service.gym_people.data_exporters;
 
 import java.io.IOException;
 import java.util.List;
 
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xddf.usermodel.chart.*;
 import org.apache.poi.xssf.usermodel.*;
 import org.example.entities.GymPerson;
-import org.example.entities.GymSeasonTicket;
 import org.example.entities.enums.Gender;
 import org.example.repositories.GymPersonRepository;
 import org.example.repositories.GymSeasonTicketRepository;
 
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTDLbls;
+import org.springframework.stereotype.Service;
 
-public class UserExcelExporter {
+@Service
+@RequiredArgsConstructor
+public class GymPersonExcelExportService {
 
-    private final XSSFWorkbook workbook;
-    private XSSFSheet sheet;
-    private XSSFSheet analyticSheet;
-    private final List<GymPerson> gymPersonList;
     private final GymPersonRepository gymPersonRepository;
     private final GymSeasonTicketRepository gymSeasonTicketRepository;
 
-    public UserExcelExporter(List<GymPerson> gymPersonList,
-                             GymPersonRepository gymPersonRepository,
-                             GymSeasonTicketRepository gymSeasonTicketRepository) {
-        this.gymPersonList = gymPersonList;
-        this.gymPersonRepository = gymPersonRepository;
-        this.gymSeasonTicketRepository = gymSeasonTicketRepository;
-        this.workbook = new XSSFWorkbook();
-    }
-
-    private void writeHeaderLine() {
+    private void writeHeaderLine(XSSFSheet sheet, XSSFWorkbook workbook) {
         sheet = workbook.createSheet("Users");
         Row row = sheet.createRow(0);
 
@@ -49,7 +39,7 @@ public class UserExcelExporter {
                 "Telegram account", "Age", "Gender", "Ticket Type"};
 
         for (int i = 0; i < headers.length; i++) {
-            createCell(row, i, headers[i], style);
+            createCell(row, i, headers[i], style, sheet);
         }
     }
 
@@ -58,7 +48,8 @@ public class UserExcelExporter {
                                        String firstHeader,
                                        String secondHeader,
                                        List <Object[]> dataList,
-                                       String chartTitle){
+                                       String chartTitle,
+                                       XSSFWorkbook workbook){
         XSSFSheet sheet = workbook.createSheet(sheetName);
         Row headerRow = sheet.createRow(0);
 
@@ -69,8 +60,8 @@ public class UserExcelExporter {
         headerFont.setFontHeight(16);
         headerStyle.setFont(headerFont);
 
-        createCell(headerRow, 0, firstHeader, headerStyle);
-        createCell(headerRow, 1, secondHeader, headerStyle);
+        createCell(headerRow, 0, firstHeader, headerStyle, sheet);
+        createCell(headerRow, 1, secondHeader, headerStyle, sheet);
 
         int rowCount = 1;
 
@@ -82,8 +73,8 @@ public class UserExcelExporter {
 
         for (Object[] objects: dataList) {
             Row row = sheet.createRow(rowCount++);
-            createCell(row, 0, objects[0] , dataStyle);
-            createCell(row, 1, objects[1] , dataStyle);
+            createCell(row, 0, objects[0] , dataStyle, sheet);
+            createCell(row, 1, objects[1] , dataStyle, sheet);
         }
 
         //безспесередньо створення діаграм
@@ -125,7 +116,7 @@ public class UserExcelExporter {
     }
 
 
-    private void createCell(Row row, int columnCount, Object value, CellStyle style) {
+    private void createCell(Row row, int columnCount, Object value, CellStyle style, XSSFSheet sheet) {
         if (sheet != null) sheet.autoSizeColumn(columnCount);
         Cell cell = row.createCell(columnCount);
 
@@ -138,7 +129,7 @@ public class UserExcelExporter {
         cell.setCellStyle(style);
     }
 
-    private void writeDataLines() {
+    private void writeDataLines(XSSFWorkbook workbook, List <GymPerson> gymPersonList, XSSFSheet sheet) {
         int rowCount = 1;
         CellStyle style = workbook.createCellStyle();
         XSSFFont font = workbook.createFont();
@@ -149,34 +140,27 @@ public class UserExcelExporter {
             Row row = sheet.createRow(rowCount++);
             int columnCount = 0;
 
-            createCell(row, columnCount++, person.getId(), style);
-            createCell(row, columnCount++, person.getEmail(), style);
-            createCell(row, columnCount++, person.getName(), style);
-            createCell(row, columnCount++, person.getPhoneNumber(), style);
-            createCell(row, columnCount++, person.getTelegramAccount(), style);
-            createCell(row, columnCount++, person.getAge(), style);
-            createCell(row, columnCount++, person.getGender() != null ? person.getGender().toString() : "NO GENDER", style);
+            createCell(row, columnCount++, person.getId(), style, sheet);
+            createCell(row, columnCount++, person.getEmail(), style, sheet);
+            createCell(row, columnCount++, person.getName(), style, sheet);
+            createCell(row, columnCount++, person.getPhoneNumber(), style, sheet);
+            createCell(row, columnCount++, person.getTelegramAccount(), style, sheet);
+            createCell(row, columnCount++, person.getAge(), style, sheet);
+            createCell(row, columnCount++, person.getGender() != null ? person.getGender().toString() : "NO GENDER", style, sheet);
             createCell(row, columnCount++,
                     person.getSeasonTicket() != null
                             ? (person.getSeasonTicket().getTicketType() != null
                             ? person.getSeasonTicket().getTicketType()
                             : "NO TICKET TYPE")
-                            : "NO TICKET", style);
+                            : "NO TICKET", style, sheet);
         }
     }
 
-    public void export(HttpServletResponse response) throws IOException {
-        writeHeaderLine();
-        writeDataLines();
-
-        /* //chart with analytic chart by ticketTypess
-        writeHeaderForAnalyticChart(analyticSheet, "TicketType", "Amount", "TicketTypeAnalyticChart");
-        int lastRow = writeDataLinesForAnalyticChart();
-        analyticDiagram(lastRow, analyticSheet,  "Ticket Type Analytic");
-
-        //chart with anallytic chart by gender
-        writeHeaderForAnalyticChart();*/
-
+    public void export(HttpServletResponse response, List <GymPerson> gymPersonList) throws IOException {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet();
+        writeHeaderLine(sheet, workbook);
+        writeDataLines(workbook, gymPersonList, sheet);
 
         List<Object[]> ticketData = gymSeasonTicketRepository.findAll().stream()
                 .map(ticket -> new Object[]{
@@ -184,7 +168,7 @@ public class UserExcelExporter {
                         (double) gymPersonRepository.countBySeasonTicket_TicketType(ticket.getTicketType())
                 })
                 .toList();
-        createAnalyticDiagram("analyticTicketTypeChart", "TicketType", "Amount", ticketData, "TicketTypeTOAmount");
+        createAnalyticDiagram("analyticTicketTypeChart", "TicketType", "Amount", ticketData, "TicketTypeTOAmount", workbook);
 
         List<Object[]> genderData = List.of(
                 new Object[]{"Male", (double) gymPersonRepository.countByGender(Gender.Male)},
@@ -192,7 +176,7 @@ public class UserExcelExporter {
                 new Object[]{"Other", (double) gymPersonRepository.countByGender(Gender.Other)}
         );
 
-        createAnalyticDiagram("analyticGenderChart", "Gender", "Amount", genderData, "GenderTOAmount");
+        createAnalyticDiagram("analyticGenderChart", "Gender", "Amount", genderData, "GenderTOAmount", workbook);
         try (ServletOutputStream outputStream = response.getOutputStream()) {
             workbook.write(outputStream);
         }

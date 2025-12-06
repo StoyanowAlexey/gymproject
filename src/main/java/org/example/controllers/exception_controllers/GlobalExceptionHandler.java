@@ -1,16 +1,11 @@
-package org.example.controllers;
+package org.example.controllers.exception_controllers;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.example.repositories.GymSeasonTicketRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -20,7 +15,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public String handleDuplicateDataExceptionSync(DataIntegrityViolationException ex, Model model) {
-        // перевіряємо текст помилки, щоб відобразити правильне повідомлення
+        var message = ex.getMessage();
         if (ex.getMessage().contains("email_unique")) {
             model.addAttribute("errorMessage", "❌ Person with this email already exists!");
         } else if (ex.getMessage().contains("phone_number_unique")) {

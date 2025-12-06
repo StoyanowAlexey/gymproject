@@ -1,4 +1,4 @@
-package org.example.controllers;
+package org.example.telegramBot;
 
 import lombok.AllArgsConstructor;
 import org.example.configs.telegram_bot.TelegramBotConfig;

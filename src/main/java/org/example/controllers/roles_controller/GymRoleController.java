@@ -1,4 +1,4 @@
-package org.example.controllers;
+package org.example.controllers.roles_controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.DTOs.GymRoleDTO;
@@ -7,7 +7,6 @@ import org.example.mappers.GymRoleMapper;
 import org.example.repositories.GymRoleRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

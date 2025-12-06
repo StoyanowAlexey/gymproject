@@ -1,4 +1,4 @@
-package org.example.controllers;
+package org.example.controllers.season_ticket_controllers;
 
 
 import lombok.RequiredArgsConstructor;
