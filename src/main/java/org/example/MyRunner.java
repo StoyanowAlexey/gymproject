@@ -3,18 +3,12 @@ package org.example;
 import lombok.RequiredArgsConstructor;
 import org.example.entities.GymRole;
 import org.example.entities.GymWorker;
-import org.example.repositories.GymRoleRepository;
-import org.example.repositories.GymWorkerRepository;
-import org.example.service.GymPersonService;
-import org.example.service.GymRoleService;
-import org.example.service.GymSeasonTicketService;
-import org.example.service.GymWorkerService;
+import org.example.repositories.role_repo.GymRoleRepository;
+import org.example.repositories.worker_repo.GymWorkerRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
-import java.util.Scanner;
 
 @Component
 @RequiredArgsConstructor

@@ -109,6 +109,9 @@
                 <input type="password" id="password" name="password" autocomplete="current-password" required>
             </div>
 
+            <input type="checkbox" id="check" onclick="myPass()">
+            <label for="check">Show Password</label>
+
             <div class="actions">
                 <button type="submit">Sign in</button>
             </div>
@@ -119,5 +122,17 @@
         </form>
     </section>
 </main>
+
+<script>
+    function myPass() {
+        var x = document.getElementById("password");
+        if (x.type === "password") {
+            x.type = "text";
+        }
+        else {
+            x.type = "password";
+        }
+    }
+</script>
 </body>
 </html>
