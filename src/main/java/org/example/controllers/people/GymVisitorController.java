@@ -7,6 +7,7 @@ import org.example.repositories.people_repo.GymVisitorRepository;
 
 import org.example.repositories.season_ticket_repo.GymSeasonTicketRepository;
 import org.example.requests.CreatePersonRequest;
+import org.example.requests.PageRequestDTO;
 import org.example.service.gym_people.photo.GymVisitorPhotoService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,22 +41,24 @@ public class GymVisitorController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public String showAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "name") String sortField,
-            @RequestParam(defaultValue = "asc") String direction,
+            @ModelAttribute PageRequestDTO pageRequest,
             Model model
     ) {
-        Sort sort = direction.equals("asc")
-                ? Sort.by(sortField).ascending()
-                : Sort.by(sortField).descending();
+        Sort sort = pageRequest.getDirection().equalsIgnoreCase("asc")
+                ? Sort.by(pageRequest.getSortField()).ascending()
+                : Sort.by(pageRequest.getSortField()).descending();
 
-        Pageable pageable = PageRequest.of(page, 10, sort);
+        Pageable pageable = PageRequest.of(
+                pageRequest.getPageNo(),
+                pageRequest.getPageSize(),
+                sort
+        );
+
         Page<?> peoplePage = gymVisitorRepository.findAll(pageable);
 
         model.addAttribute("people", peoplePage.getContent());
         model.addAttribute("page", peoplePage);
-        model.addAttribute("sortField", sortField);
-        model.addAttribute("direction", direction);
+        model.addAttribute("pageRequest", pageRequest);
 
         return "people";
     }
